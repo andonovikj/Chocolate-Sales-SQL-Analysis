@@ -13,6 +13,7 @@
 /*--------------------------------------------------------------
 1.1 Best-selling product in each country
 --------------------------------------------------------------*/
+CREATE VIEW vw_best_product_by_country AS
 
 WITH ProductRevenue AS (
 	SELECT
@@ -35,7 +36,7 @@ WHERE rank_num = 1;
 /*--------------------------------------------------------------
 1.2 Salesperson ranking based on total revenue
 --------------------------------------------------------------*/
-
+CREATE VIEW vw_sales_person_ranking_revenue AS
 SELECT
 	sales_person,
 	SUM(amount_numeric) AS revenue,
@@ -74,7 +75,7 @@ WHERE rank_num <=3;
 /*--------------------------------------------------------------
 2.1 Year-over-year revenue growth
 --------------------------------------------------------------*/
-
+CREATE VIEW vw_yearly_sales_revenue_growth AS
 WITH yearly_sales AS (
 	SELECT
 		EXTRACT(YEAR FROM sale_date_actual) AS year,
@@ -98,23 +99,40 @@ FROM yearly_sales;
 Determine how much each product contributes
 to overall company revenue.
 --------------------------------------------------------------*/
-
+CREATE VIEW vw_pareto_analysis AS
 WITH ProductSales AS (
-
-	SELECT
-		product,
-		SUM(amount_numeric) AS revenue
-	FROM chocolate_sales
-	GROUP BY product)
+    SELECT
+        product,
+        SUM(amount_numeric) AS revenue
+    FROM chocolate_sales
+    GROUP BY product
+)
 
 SELECT
-	product,
-	revenue,
-	ROUND(
-	revenue*100.0/
-	SUM(revenue) OVER(),2) AS contribution_percentage,
-	SUM(revenue) OVER(ORDER BY revenue DESC) AS cumulative_revenue
+    product,
+    revenue,
+
+    ROUND(
+        revenue * 100.0 /
+        SUM(revenue) OVER(),
+        2
+    ) AS contribution_percentage,
+
+    SUM(revenue) OVER(
+        ORDER BY revenue DESC
+    ) AS cumulative_revenue,
+
+    ROUND(
+        SUM(revenue) OVER(
+            ORDER BY revenue DESC
+        )
+        *100.0/
+        SUM(revenue) OVER(),
+        2
+    ) AS cumulative_percentage
+
 FROM ProductSales
+
 ORDER BY revenue DESC;
 
 
